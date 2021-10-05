@@ -1,0 +1,47 @@
+version: '3.7'
+
+services:
+  
+  node:
+    build:
+      context: ./node
+    container_name: node
+    networks:
+      - node-network
+    depends_on:
+      - db
+    ports:
+      - "5000:5000"
+
+  nginx:
+    build:
+      context: ./nginx
+    container_name: nginx
+    restart: always
+    ports:
+      - "8080:80"
+    depends_on:
+      - node
+    networks:
+      - node-network
+
+  db:
+    image: mariadb:10.6
+    container_name: db
+    restart: always
+    tty: true
+    command: "mysqld --init-file /data/application/init.sql"
+    volumes:
+      - ./init.sql:/data/application/init.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    networks:
+      - node-network
+    ports:
+      - 3306:3306
+    expose:
+      - 3306
+
+networks:
+  node-network:
+    driver: bridge
